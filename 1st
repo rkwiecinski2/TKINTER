@@ -1,0 +1,38 @@
+from tkinter import *
+from tkinter.ttk import Combobox
+window=Tk()
+
+btn=Button(window, text="Submit", fg='blue')
+btn.place(x=80, y=220)
+
+var = StringVar()
+var.set("one")
+data=("Male", "Female")
+cb=Combobox(window, values=data)
+cb.place(x=80, y=150)
+data2 = ("stocks", "futures for indexes", "currencies", "commodities")
+
+lb=Listbox(window, height=5, selectmode='multiple')
+for num in data2:
+    lb.insert(END,num)
+lb.place(x=250, y=150)
+
+v0=IntVar()
+v0.set(1)
+r1=Radiobutton(window, text="internal markets", variable=v0,value=1)
+r2=Radiobutton(window, text="foreign markets", variable=v0,value=2)
+r1.place(x=80,y=50)
+r2.place(x=220, y=50)
+
+
+
+v1 = IntVar()
+v2 = IntVar()
+C1 = Checkbutton(window, text = "Exchange Traded", variable = v1)
+C2 = Checkbutton(window, text = "OTC's", variable = v2)
+C1.place(x=80, y=100)
+C2.place(x=220, y=100)
+
+window.title('Investment preferences')
+window.geometry("400x300+10+10")
+window.mainloop()
