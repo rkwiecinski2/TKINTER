@@ -35,3 +35,4 @@ C2.place(x=220, y=100)
 window.title('Investment preferences')
 window.geometry("400x300+10+10")
 window.mainloop()
+
