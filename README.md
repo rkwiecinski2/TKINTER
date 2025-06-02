@@ -1,67 +1,68 @@
-Sub ShowDynamicQuestionnaire()
-    Dim wsQ As Worksheet, wsA As Worksheet
-    Dim currID As Long, lastRow As Long
-    Dim qDict As Object, aRow As Long
-    Set wsQ = ThisWorkbook.Sheets("Questions")
+Option Explicit
+
+Public QuestionsDict As Object
+Public CurrentID As String
+Public OutputText As String
+
+Sub StartQuestionnaire()
+    Dim ws As Worksheet
+    Dim lastRow As Long, i As Long
+    Dim q As Object
+    Dim ID As String
     
-    On Error Resume Next
-    Set wsA = ThisWorkbook.Sheets("Answers")
-    If wsA Is Nothing Then
-        Set wsA = ThisWorkbook.Sheets.Add
-        wsA.Name = "Answers"
-    End If
-    wsA.Cells.ClearContents
-    wsA.Range("A1:B1").Value = Array("Question", "Answer")
-    aRow = 2
-    
-    Set qDict = CreateObject("Scripting.Dictionary")
-    lastRow = wsQ.Cells(wsQ.Rows.Count, "A").End(xlUp).Row
-    
-    ' Load questions into dictionary
-    Dim i As Long
+    ' Inicjalizacja słownika
+    Set QuestionsDict = CreateObject("Scripting.Dictionary")
+    Set ws = ThisWorkbook.Sheets(1)
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    ' Wczytaj dane z arkusza do słownika
     For i = 2 To lastRow
-        qDict(wsQ.Cells(i, 1).Value) = Application.Index(wsQ.Range("A" & i & ":H" & i).Value, 1, 0)
+        ID = Trim(ws.Cells(i, 1).Value)
+        Set q = CreateObject("Scripting.Dictionary")
+        
+        With q
+            .Add "Question", ws.Cells(i, 2).Value
+            .Add "Type", ws.Cells(i, 3).Value
+            .Add "Option1", ws.Cells(i, 4).Value
+            .Add "Option2", ws.Cells(i, 5).Value
+            .Add "NextIfD", ws.Cells(i, 6).Value
+            .Add "NextIfE", ws.Cells(i, 7).Value
+            .Add "Action", ws.Cells(i, 8).Value
+            .Add "Comment", ws.Cells(i, 9).Value
+        End With
+        
+        QuestionsDict.Add ID, q
     Next i
-    
-    currID = 1
-    Do While currID <> 0
-        Dim qData As Variant
-        qData = qDict(currID)
-        Dim qType As String: qType = qData(3)
-        Dim answer As Variant, nextID As Long
-        
-        Select Case LCase(qType)
-            Case "list"
-                answer = Application.InputBox(qData(2) & vbCrLf & "1. " & qData(4) & vbCrLf & "2. " & qData(5), "Select Option (1 or 2)", Type:=1)
-                If answer = 1 Then
-                    wsA.Cells(aRow, 1).Value = qData(2)
-                    wsA.Cells(aRow, 2).Value = qData(4)
-                    nextID = qData(6)
-                ElseIf answer = 2 Then
-                    wsA.Cells(aRow, 1).Value = qData(2)
-                    wsA.Cells(aRow, 2).Value = qData(5)
-                    nextID = qData(7)
-                Else
-                    MsgBox "Cancelled or invalid input."
-                    Exit Sub
-                End If
-            
-            Case Else
-                answer = Application.InputBox(qData(2), "Your Answer")
-                If answer = False Then Exit Sub
-                wsA.Cells(aRow, 1).Value = qData(2)
-                wsA.Cells(aRow, 2).Value = answer
-                nextID = 0
-        End Select
-        
-        ' Check if there's an action
-        If Trim(qData(8)) <> "" Then
-            MsgBox qData(8), vbInformation, "Action"
-        End If
-        
-        aRow = aRow + 1
-        currID = nextID
-    Loop
-    
-    MsgBox "All answers recorded!", vbInformation
+
+    ' Start od ID1
+    CurrentID = "ID1"
+    OutputText = ""
+
+    ' Pokaż pierwsze pytanie i formularz
+    ShowNextQuestion
 End Sub
+
+Public Sub ShowNextQuestion()
+    Dim q As Object
+    
+    ' Sprawdź czy istnieje CurrentID
+    If Not QuestionsDict.Exists(CurrentID) Then
+        MsgBox "Błąd: pytanie o ID '" & CurrentID & "' nie zostało znalezione.", vbCritical
+        Exit Sub
+    End If
+    
+    Set q = QuestionsDict(CurrentID)
+    
+    With QuestionnaireForm
+        .lblQuestion.Caption = q("Question")
+        .cmbAnswer.Clear
+        .cmbAnswer.AddItem q("Option1")
+        .cmbAnswer.AddItem q("Option2")
+        .cmbAnswer.ListIndex = -1 ' brak zaznaczenia
+        .Show
+    End With
+End Sub
+
+
+
+
